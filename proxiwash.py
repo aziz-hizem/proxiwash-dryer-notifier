@@ -1,26 +1,22 @@
-import os
-import time
 from selenium import webdriver
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from win10toast import ToastNotifier  # Import ToastNotifier from win10toast
+import time
+from plyer import notification
 
 # Function to send notification
-def send_notification(message):    
-    # Create a ToastNotifier object
-    toaster = ToastNotifier()
-    
-    # Display the notification
-    toaster.show_toast(
-        "Washing Machine Status",  # Title of the notification
-        message,  # Message content
-        icon_path="icon.ico",  # Path to the icon file
-        duration=0  # Make the notification persistent
+def send_notification(message):
+    notification.notify(
+        title='Washing Machine Status',
+        message=message,
+        app_name='Washing Machine Notification',
+        app_icon=r'C:\Users\PCS\Downloads\ProxiWash Automation\icon.ico',   
+        timeout=None # Adjust the timeout as needed
+       
     )
-
 
 # Function to check washing machine status
 def check_washing_machine_status():
@@ -35,9 +31,6 @@ def check_washing_machine_status():
     driver = webdriver.Edge(service=Service(edge_driver_path), options=edge_options)
     driver.get("https://www.proxiwash.com/laverie?code=82fc94&fbclid=IwAR04XPVHi0cGsI1CtQS-qWPLHjVAbsHtah8lm_ull0bNhLxpvbUtu5OwdqE")  # Replace with the URL of your website
 
-    # Wait for the page to load if needed
-    #time.sleep(10)  # Adjust the waiting time as needed
-
     # Find the element containing the status of your washing machine
     try:
         # Click on a certain button (identified by XPath) before entering the while loop
@@ -48,8 +41,9 @@ def check_washing_machine_status():
         print("Button clicked")
         
     except Exception as e:
-        print("Error:", e)
+        print("Error clicking button:", e)
     
+    print("Notification icon path:", r'C:\Users\PCS\Downloads\ProxiWash Automation\icon.ico')
     send_notification("Checking is on !")
 
     while True:
@@ -61,7 +55,7 @@ def check_washing_machine_status():
             print(machine_status.lower())
             state = machine_status.lower() 
         except Exception as e2:
-            print("Error:", e2)
+            print("Error getting machine status:", e2)
         
         # Check if the machine status indicates it's available
         if state == "available":
@@ -71,6 +65,8 @@ def check_washing_machine_status():
         else:
             time.sleep(60)
             
+    # Close the browser
+    driver.quit()
 
 # Call the function
 check_washing_machine_status()
