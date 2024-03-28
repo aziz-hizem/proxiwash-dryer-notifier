@@ -1,0 +1,18 @@
+# Old versions, installers and PyInstaller output kept locally only
+_archive/
+build/
+dist/
+*.exe
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Editors / OS
+.vscode/
+.idea/
+.claude/
+desktop.ini
+Thumbs.db
