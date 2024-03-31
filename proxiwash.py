@@ -15,6 +15,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from win10toast import ToastNotifier  
 from threading import Thread
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import StaleElementReferenceException
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -58,10 +60,8 @@ def check_washing_machine_status(machine_number, root):
     
     try:
         # Click on a certain button (identified by XPath) before entering the while loop
-        button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[2]"))  
-        )
-        button.click()
+        button = driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[2]")
+        driver.execute_script("arguments[0].click();", button)
         print("Button clicked")
         #send_notification("Checking is on !")
         
@@ -69,6 +69,8 @@ def check_washing_machine_status(machine_number, root):
         print("Error:", e)
         
         
+    washing_machine_button=driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[1]")
+   
     print("checking machine n°",machine_number,"...")
     
     def on_key_press(key):
@@ -95,12 +97,6 @@ def check_washing_machine_status(machine_number, root):
     g56=1
     c=1 
     while c==1 :
-        driver.refresh()
-        try :
-            button.click()
-        except Exception as e: 
-            driver.refresh()
-            button.click()
         try:
             if machine_number==2 :
                 time.sleep(2)
@@ -116,17 +112,16 @@ def check_washing_machine_status(machine_number, root):
             else :
                 g56=0 
             
-            washing_machine_button=driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[1]")
 
         
             # Check if the machine status indicates it's busy
             if g56==1 :
-                if (machine_status_text.lower() == "busy") or (machine_status_text.lower()=="buzy") or (machine_status_text.lower()=="finished"):
+                if machine_status_text.lower() in ["busy", "buzy", "finished"]:
                     time.sleep(10)
-                    washing_machine_button.click()
+                    driver.execute_script("arguments[0].click();", washing_machine_button)
                     time.sleep(5)
-                    button.click()
-                    if (machine_status_text.lower() == "busy") or (machine_status_text.lower()=="buzy") or (machine_status_text.lower()=="finished"):
+                    driver.execute_script("arguments[0].click();", button)
+                    if machine_status_text.lower() in ["busy", "buzy", "finished"]:
                         print("Your drying cycle is finished!")
                         c=0 
                         show_drying_complete_window(driver)
@@ -138,19 +133,19 @@ def check_washing_machine_status(machine_number, root):
                         print("The drying machine is either busy or not being used.")
                         time.sleep(20)
                         try :
-                            washing_machine_button.click()
+                            driver.execute_script("arguments[0].click();", washing_machine_button)
                             time.sleep(2)
-                            button.click()
+                            driver.execute_script("arguments[0].click();", button)
                         except Exception as e:
                             driver.refresh()
-                            button.click()
+                            driver.execute_script("arguments[0].click();", button)
                         print("Rechecking")
                 else:
                         c=1
                         print("The drying machine is either busy or not being used.")
                         time.sleep(20)
                         try :
-                            washing_machine_button.click()
+                            driver.execute_script("arguments[0].click();", washing_machine_button)
                             time.sleep(2)
                             button.click()
                         except Exception as e :
@@ -161,17 +156,16 @@ def check_washing_machine_status(machine_number, root):
                 print("The drying machine is either busy or not being used.")
                 time.sleep(20)
                 try :
-                    washing_machine_button.click()
+                    driver.execute_script("arguments[0].click();", washing_machine_button)
                     time.sleep(2)
-                    button.click()
+                    driver.execute_script("arguments[0].click();", button)
                 except Exception as e:
                     driver.refresh()
-                    button.click()
-                
-                
-            
-        except Exception as e:
-            print("Error:", e)
+                    driver.execute_script("arguments[0].click();", button)     
+        except StaleElementReferenceException:
+            print("StaleElementReferenceException occurred. Scrolling back to the top of the page...")
+            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.HOME)
+            continue
  
 
 # Function to create GUI for selecting machine number
