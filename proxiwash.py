@@ -31,14 +31,13 @@ def resource_path(relative_path):
 def send_notification(message):
     # Create a ToastNotifier object
     toaster = ToastNotifier()
-    
     # Display the notification
     toaster.show_toast(
         "Drying Machine Status",  # Title of the notification
         message,  # Message content
-        icon_path=resource_path(r"C:\Users\PCS\Downloads\ProxiWash-Automation\icon1.ico"),  # Path to the icon file
-        # Make the notification persistent (don't touch it)
-    )
+        icon_path=("icons\\icon1.ico"),  # Path to the icon file
+        duration=10
+        )
     print("Notification sent.")
 
     
@@ -50,7 +49,7 @@ def check_washing_machine_status(machine_number, root):
     edge_options.use_chromium = True
 
     # Path to your Edge driver executable
-    edge_driver_path = resource_path(r'C:\Users\PCS\Downloads\ProxiWash-Automation\edgedriver_win64\msedgedriver.exe')
+    edge_driver_path = ("msedgedriver.exe")
 
     # Start the WebDriver and open the website
     driver = webdriver.Edge(service=Service(edge_driver_path), options=edge_options)
@@ -63,7 +62,7 @@ def check_washing_machine_status(machine_number, root):
         button = driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[2]")
         driver.execute_script("arguments[0].click();", button)
         print("Button clicked")
-        #send_notification("Checking is on !")
+        send_notification("Checking is on !")
         
     except Exception as e:
         print("Error:", e)
@@ -116,18 +115,20 @@ def check_washing_machine_status(machine_number, root):
         
             # Check if the machine status indicates it's busy
             if g56==1 :
-                if machine_status_text.lower() in ["busy", "buzy", "finished"]:
-                    time.sleep(10)
-                    driver.execute_script("arguments[0].click();", washing_machine_button)
-                    time.sleep(5)
+                if machine_status_text.lower() in ["busy", "buzy", "finished",'available']:
+                    time.sleep(1)
+                    driver.get("https://www.google.com")                     
+                    time.sleep(1)
+                    driver.get("https://www.proxiwash.com/laverie?code=82fc94&fbclid=IwAR04XPVHi0cGsI1CtQS-qWPLHjVAbsHtah8lm_ull0bNhLxpvbUtu5OwdqE")  
+                    button = driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[2]")
                     driver.execute_script("arguments[0].click();", button)
-                    if machine_status_text.lower() in ["busy", "buzy", "finished"]:
+                    time.sleep(1)
+                    if machine_status_text.lower() in ["busy", "buzy", "finished",'available']:
                         print("Your drying cycle is finished!")
                         c=0 
                         show_drying_complete_window(driver)
                         driver.quit()
                         os._exit(0)
-                    
                     else:
                         c=1
                         print("The drying machine is either busy or not being used.")
@@ -164,7 +165,9 @@ def check_washing_machine_status(machine_number, root):
                     driver.execute_script("arguments[0].click();", button)     
         except StaleElementReferenceException:
             print("StaleElementReferenceException occurred. Scrolling back to the top of the page...")
-            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.HOME)
+            driver.get("https://www.proxiwash.com/laverie?code=82fc94&fbclid=IwAR04XPVHi0cGsI1CtQS-qWPLHjVAbsHtah8lm_ull0bNhLxpvbUtu5OwdqE")  
+            button = driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[2]")
+            driver.execute_script("arguments[0].click();", button)
             continue
  
 
@@ -195,7 +198,7 @@ def select_machine():
     custom_font = ("Segoe UI", 12)
     
     # Load the image
-    original_image = Image.open(resource_path(r"C:\Users\PCS\Downloads\ProxiWash-Automation\icon1.ico"))
+    original_image = Image.open("icons\\icon1.ico")
     
     # Resize the image
     width, height = 50, 50  # Set the desired width and height
@@ -211,6 +214,8 @@ def select_machine():
     
     label = tk.Label(root, text="Choose Your Machine !", font=("Segoe UI", 20))
     label.pack(pady=20)
+    label = tk.Label(root, text="(Use F3 to close the program later)",fg="grey", font=("Segoe UI", 9))
+    label.pack(pady=9)
     
     # Function to handle button hover
     def on_enter(btn):
@@ -250,12 +255,12 @@ def quit():
         #window.destroy()
         os._exit(0)
         
-    window = tk.Tk()
+    window = tk.Toplevel()
     window.title("Program Terminated.")
     window.geometry("500x250")
     
     # Load the image
-    original_image2 = Image.open(resource_path(r"C:\Users\PCS\Downloads\ProxiWash-Automation\bubbles.ico"))
+    original_image2 = Image.open("icons\\bubbles.ico")
     
     # Resize the image
     width, height = 50, 50  # Set the desired width and height
@@ -300,8 +305,8 @@ def show_drying_complete_window(driver):
         print("Over and Out.")
         window.destroy()  
         time.sleep(2)
-        send_notification("Your drying cycle is finished. Arrivederci !")
         driver.quit()
+        send_notification("Your drying cycle is finished. Arrivederci !")
         os._exit(0)
         
     
@@ -323,7 +328,7 @@ def show_drying_complete_window(driver):
     window.geometry("+{}-{}".format(x_coordinate, y_coordinate))
     
     # Load the image
-    original_image = Image.open(resource_path(r"C:\Users\PCS\Downloads\ProxiWash-Automation\icon2.ico"))
+    original_image = Image.open(r"icons\\icon2.ico")
     
     # Resize the image
     width, height = 50, 50  # Set the desired width and height
