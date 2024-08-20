@@ -3,11 +3,12 @@ import sys
 import time
 import tkinter as tk
 import winsound
-import keyboard
+#import keyboard
 import threading
 from pynput import keyboard
 from PIL import Image, ImageTk 
 from selenium import webdriver
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.options import Options
@@ -31,13 +32,14 @@ def resource_path(relative_path):
 def send_notification(message):
     # Create a ToastNotifier object
     toaster = ToastNotifier()
+    
     # Display the notification
     toaster.show_toast(
         "Drying Machine Status",  # Title of the notification
         message,  # Message content
-        icon_path=("icons\\icon1.ico"),  # Path to the icon file
-        duration=10
-        )
+        icon_path=resource_path("icons\\icon1.ico"),  # Path to the icon file
+        # Make the notification persistent (don't touch it)
+    )
     print("Notification sent.")
 
     
@@ -48,11 +50,12 @@ def check_washing_machine_status(machine_number, root):
     edge_options = Options()
     edge_options.use_chromium = True
 
-    # Path to your Edge driver executable
-    edge_driver_path = ("msedgedriver.exe")
+    #edge_driver_path = resource_path("msedgedriver.exe")
+    #driver = webdriver.Edge(service=Service(edge_driver_path), options=edge_options)
 
-    # Start the WebDriver and open the website
-    driver = webdriver.Edge(service=Service(edge_driver_path), options=edge_options)
+    # Automatically handle WebDriver updates
+    driver = webdriver.Edge(service=Service(EdgeChromiumDriverManager().install()), options=edge_options)
+
     driver.get("https://www.proxiwash.com/laverie?code=82fc94&fbclid=IwAR04XPVHi0cGsI1CtQS-qWPLHjVAbsHtah8lm_ull0bNhLxpvbUtu5OwdqE")  # Replace with the URL of your website
 
     time.sleep(2) 
@@ -62,7 +65,7 @@ def check_washing_machine_status(machine_number, root):
         button = driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[2]")
         driver.execute_script("arguments[0].click();", button)
         print("Button clicked")
-        send_notification("Checking is on !")
+        #send_notification("Checking is on !")
         
     except Exception as e:
         print("Error:", e)
@@ -115,20 +118,18 @@ def check_washing_machine_status(machine_number, root):
         
             # Check if the machine status indicates it's busy
             if g56==1 :
-                if machine_status_text.lower() in ["busy", "buzy", "finished",'available']:
-                    time.sleep(1)
-                    driver.get("https://www.google.com")                     
-                    time.sleep(1)
-                    driver.get("https://www.proxiwash.com/laverie?code=82fc94&fbclid=IwAR04XPVHi0cGsI1CtQS-qWPLHjVAbsHtah8lm_ull0bNhLxpvbUtu5OwdqE")  
-                    button = driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[2]")
+                if machine_status_text.lower() in ["busy", "buzy", "finished"]:
+                    time.sleep(10)
+                    driver.execute_script("arguments[0].click();", washing_machine_button)
+                    time.sleep(5)
                     driver.execute_script("arguments[0].click();", button)
-                    time.sleep(1)
-                    if machine_status_text.lower() in ["busy", "buzy", "finished",'available']:
+                    if machine_status_text.lower() in ["busy", "buzy", "finished"]:
                         print("Your drying cycle is finished!")
                         c=0 
                         show_drying_complete_window(driver)
                         driver.quit()
                         os._exit(0)
+                    
                     else:
                         c=1
                         print("The drying machine is either busy or not being used.")
@@ -165,9 +166,7 @@ def check_washing_machine_status(machine_number, root):
                     driver.execute_script("arguments[0].click();", button)     
         except StaleElementReferenceException:
             print("StaleElementReferenceException occurred. Scrolling back to the top of the page...")
-            driver.get("https://www.proxiwash.com/laverie?code=82fc94&fbclid=IwAR04XPVHi0cGsI1CtQS-qWPLHjVAbsHtah8lm_ull0bNhLxpvbUtu5OwdqE")  
-            button = driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[2]")
-            driver.execute_script("arguments[0].click();", button)
+            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.HOME)
             continue
  
 
@@ -198,7 +197,7 @@ def select_machine():
     custom_font = ("Segoe UI", 12)
     
     # Load the image
-    original_image = Image.open("icons\\icon1.ico")
+    original_image = Image.open(resource_path("icons\\icon1.ico"))
     
     # Resize the image
     width, height = 50, 50  # Set the desired width and height
@@ -255,12 +254,12 @@ def quit():
         #window.destroy()
         os._exit(0)
         
-    window = tk.Toplevel()
+    window = tk.Tk()
     window.title("Program Terminated.")
     window.geometry("500x250")
     
     # Load the image
-    original_image2 = Image.open("icons\\bubbles.ico")
+    original_image2 = Image.open(resource_path("icons\\bubbles.ico"))
     
     # Resize the image
     width, height = 50, 50  # Set the desired width and height
@@ -305,8 +304,8 @@ def show_drying_complete_window(driver):
         print("Over and Out.")
         window.destroy()  
         time.sleep(2)
-        driver.quit()
         send_notification("Your drying cycle is finished. Arrivederci !")
+        driver.quit()
         os._exit(0)
         
     
@@ -328,7 +327,7 @@ def show_drying_complete_window(driver):
     window.geometry("+{}-{}".format(x_coordinate, y_coordinate))
     
     # Load the image
-    original_image = Image.open(r"icons\\icon2.ico")
+    original_image = Image.open(resource_path("icons\\icon2.ico"))
     
     # Resize the image
     width, height = 50, 50  # Set the desired width and height
