@@ -1,76 +1,49 @@
 import os
-import sys
 import time
-import tkinter as tk
+import customtkinter
 import winsound
-#import keyboard
+import keyboard
 import threading
 from pynput import keyboard
-from PIL import Image, ImageTk 
+from PIL import Image 
 from selenium import webdriver
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from win10toast import ToastNotifier  
-from threading import Thread
-from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import StaleElementReferenceException
+from plyer import notification
 
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
 
-# Function to send notification
 def send_notification(message):
-    # Create a ToastNotifier object
-    toaster = ToastNotifier()
-    
-    # Display the notification
-    toaster.show_toast(
-        "Drying Machine Status",  # Title of the notification
-        message,  # Message content
-        icon_path=resource_path("icons\\icon1.ico"),  # Path to the icon file
-        # Make the notification persistent (don't touch it)
+    notification.app_name = "ProxiWash 1.7 By Aziz Hizem"
+    notification.notify(
+        title="Drying Machine Status",
+        message=message,
+        app_icon=("icons\\icon1.ico"),
+        timeout=1
     )
-    print("Notification sent.")
-
+  
     
-# Function to check washing machine status
-def check_washing_machine_status(machine_number, root):
+def check_washing_machine_status(machine_number):
    
     # Set up Edge options
     edge_options = Options()
     edge_options.use_chromium = True
-
-    #edge_driver_path = resource_path("msedgedriver.exe")
-    #driver = webdriver.Edge(service=Service(edge_driver_path), options=edge_options)
-
-    # Automatically handle WebDriver updates
-    driver = webdriver.Edge(service=Service(EdgeChromiumDriverManager().install()), options=edge_options)
-
-    driver.get("https://www.proxiwash.com/laverie?code=82fc94&fbclid=IwAR04XPVHi0cGsI1CtQS-qWPLHjVAbsHtah8lm_ull0bNhLxpvbUtu5OwdqE")  # Replace with the URL of your website
-
+    # Path to your Edge driver executable
+    edge_driver_path = ("msedgedriver.exe")
+    # Start the WebDriver and open the website
+    driver = webdriver.Edge(service=Service(edge_driver_path), options=edge_options)
+    driver.get("https://www.proxiwash.com/laverie?code=82fc94&fbclid=IwAR04XPVHi0cGsI1CtQS-qWPLHjVAbsHtah8lm_ull0bNhLxpvbUtu5OwdqE") 
+    #send_notification("Checking is on !")
     time.sleep(2) 
     
     try:
-        # Click on a certain button (identified by XPath) before entering the while loop
         button = driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[2]")
         driver.execute_script("arguments[0].click();", button)
         print("Button clicked")
-        #send_notification("Checking is on !")
-        
     except Exception as e:
         print("Error:", e)
-        
-        
+          
     washing_machine_button=driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[1]")
    
     print("checking machine n°",machine_number,"...")
@@ -119,17 +92,19 @@ def check_washing_machine_status(machine_number, root):
             # Check if the machine status indicates it's busy
             if g56==1 :
                 if machine_status_text.lower() in ["busy", "buzy", "finished"]:
-                    time.sleep(10)
-                    driver.execute_script("arguments[0].click();", washing_machine_button)
-                    time.sleep(5)
+                    time.sleep(3)
+                    driver.get("https://www.google.com")                     
+                    time.sleep(2)
+                    driver.get("https://www.proxiwash.com/laverie?code=82fc94&fbclid=IwAR04XPVHi0cGsI1CtQS-qWPLHjVAbsHtah8lm_ull0bNhLxpvbUtu5OwdqE")  
+                    button = driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[2]")
                     driver.execute_script("arguments[0].click();", button)
+                    time.sleep(2)
                     if machine_status_text.lower() in ["busy", "buzy", "finished"]:
                         print("Your drying cycle is finished!")
-                        c=0 
+                        c=0
                         show_drying_complete_window(driver)
                         driver.quit()
                         os._exit(0)
-                    
                     else:
                         c=1
                         print("The drying machine is either busy or not being used.")
@@ -166,87 +141,12 @@ def check_washing_machine_status(machine_number, root):
                     driver.execute_script("arguments[0].click();", button)     
         except StaleElementReferenceException:
             print("StaleElementReferenceException occurred. Scrolling back to the top of the page...")
-            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.HOME)
+            driver.get("https://www.proxiwash.com/laverie?code=82fc94&fbclid=IwAR04XPVHi0cGsI1CtQS-qWPLHjVAbsHtah8lm_ull0bNhLxpvbUtu5OwdqE")  
+            button = driver.find_element(By.XPATH, "//*[@id='app']/main[1]/div[1]/div[2]/button[2]")
+            driver.execute_script("arguments[0].click();", button)
             continue
  
 
-# Function to create GUI for selecting machine number
-def select_machine():
-    def handle_selection(machine_number):
-        root.destroy()  # Close the selection window
-        print(machine_number)
-        check_washing_machine_status(machine_number, root)  
-    
-    root = tk.Tk()
-    root.title("Choose Your Machine !")
-    
-    #placement
-    # Get the screen width and height
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-
-    # Calculate the x and y coordinates for the window to be placed in the middle
-    x_coordinate = int((screen_width - root.winfo_reqwidth()) / 2)
-    y_coordinate = int((screen_height - root.winfo_reqheight()) / 2)
-
-    # Set the geometry of the window to place it in the middle
-    root.geometry("+{}-{}".format(x_coordinate, y_coordinate))
-
-    
-    # Define custom font
-    custom_font = ("Segoe UI", 12)
-    
-    # Load the image
-    original_image = Image.open(resource_path("icons\\icon1.ico"))
-    
-    # Resize the image
-    width, height = 50, 50  # Set the desired width and height
-    resized_image = original_image.resize((width, height))
-    
-    # Convert the resized image to PhotoImage
-    image = ImageTk.PhotoImage(resized_image)
-    
-    # Display the image
-    label_image = tk.Label(root, image=image)
-    label_image.pack(pady=10)
-    
-    
-    label = tk.Label(root, text="Choose Your Machine !", font=("Segoe UI", 20))
-    label.pack(pady=20)
-    label = tk.Label(root, text="(Use F3 to close the program later)",fg="grey", font=("Segoe UI", 9))
-    label.pack(pady=9)
-    
-    # Function to handle button hover
-    def on_enter(btn):
-        btn.config(bg="cyan")
-    
-    # Function to handle button hover exit
-    def on_leave(btn):
-        btn.config(bg="turquoise")
-     
-    # Button for machine 2
-    btn_machine_2 = tk.Button(root, text="2", font=custom_font, width=20, padx=20, pady=10, command=lambda: handle_selection(2), bd=2, relief="solid", highlightbackground="red")
-    btn_machine_2.pack(pady=10)
-    btn_machine_2.bind("<Enter>", lambda event, btn=btn_machine_2: on_enter(btn))
-    btn_machine_2.bind("<Leave>", lambda event, btn=btn_machine_2: on_leave(btn))
-    
-    
-    # Button for machine 3
-    btn_machine_3 = tk.Button(root, text="3", font=custom_font, width=20, padx=20, pady=10, command=lambda: handle_selection(3), bd=2, relief="solid", highlightbackground="red")
-    btn_machine_3.pack(pady=10)
-    btn_machine_3.bind("<Enter>", lambda event, btn=btn_machine_3: on_enter(btn))
-    btn_machine_3.bind("<Leave>", lambda event, btn=btn_machine_3: on_leave(btn))
-    
-    label2=tk.Label(root, text="By Aziz Hizem.", font=("Segoe UI", 9), fg="grey", padx=10, pady=10)
-    label2.pack()
-       
-    root.mainloop()
-
-def play_sound():
-    winsound.PlaySound("sound.wav", winsound.SND_FILENAME)
-    
-  
-#This function is not being used, still in dev phase    
 def quit():
        
     # Function to exit the program
@@ -254,44 +154,49 @@ def quit():
         #window.destroy()
         os._exit(0)
         
-    window = tk.Tk()
+    window = customtkinter.CTk()
     window.title("Program Terminated.")
-    window.geometry("500x250")
+    window.geometry("450x210")
+    
+    window.iconbitmap("icons\\icon2.ico")
+    
+    custom_font = ("Roboto", 24)
     
     # Load the image
-    original_image2 = Image.open(resource_path("icons\\bubbles.ico"))
+    image = customtkinter.CTkImage(light_image=Image.open("icons\\icon2.ico"),
+	dark_image=Image.open("icons\\icon2.ico"),
+	size=(50,50)) # WidthxHeight
+       
+    my_label = customtkinter.CTkLabel(window, text="", image=image)
+    my_label.pack(pady=10)
     
-    # Resize the image
-    width, height = 50, 50  # Set the desired width and height
-    resized_image2 = original_image2.resize((width, height))
     
-    # Convert the resized image to PhotoImage
-    image2 = ImageTk.PhotoImage(resized_image2)
+    # Create a label with the message 
+    label = customtkinter.CTkLabel(master=window, text="Abort Mission !", font=(custom_font, 20))
+    label.pack(pady=10)
     
-    # Display the image
-    label_image2 = tk.Label(window, image=image2)
-    label_image2.pack(pady=10)
+ 
+    btn_done = customtkinter.CTkButton(master=window,
+                                text="Quit",
+                                font=(custom_font,30),
+                                text_color=("white","dark slate gray"),
+                                width=270,
+                                height=40,
+                                border_width=2,
+                                border_color=("white","black"),
+                                corner_radius=20,
+                                command=lambda:exit_program(), 
+                                fg_color=("cyan","lightgray"),
+                                hover_color=("#4ee89b","cyan")  
+                                )
+    btn_done.pack(pady=4)
     
-    # Create a label with the message
-    label2 = tk.Label(window, text="Abort Mission !", font=("Segoe UI", 20), padx=10, pady=10)
-    label2.pack()
-    
-    # Define custom font
-    custom_font2 = ("Segoe UI", 12)
-    
-    # Function to handle button hover
-    def on_enter(btn2):
-        btn2.config(bg="cyan")
-    
-    # Function to handle button hover exit
-    def on_leave(btn2):
-        btn2.config(bg="turquoise")
-     
-    # Button for machine 2
-    btn_done2 = tk.Button(window, background="turquoise", text="Quit", font=custom_font2, width=20, padx=20, pady=10, command=lambda: exit_program(), bd=2, relief="solid", highlightbackground="red")
-    btn_done2.pack(pady=10)
-    btn_done2.bind("<Enter>", lambda event, btn=btn_done2: on_enter(btn))
-    btn_done2.bind("<Leave>", lambda event, btn=btn_done2: on_leave(btn))
+
+    label = customtkinter.CTkLabel(master=window, text="By Aziz Hizem.",text_color="gray", font=(custom_font, 9),
+                               width=120,
+                               height=25,
+                               corner_radius=20)
+    label.pack(pady=3)
     
     play_sound()
        
@@ -304,77 +209,187 @@ def show_drying_complete_window(driver):
         print("Over and Out.")
         window.destroy()  
         time.sleep(2)
-        send_notification("Your drying cycle is finished. Arrivederci !")
         driver.quit()
         os._exit(0)
         
     
     # Create a new tkinter window
-    window = tk.Tk()
+    window = customtkinter.CTk()
     window.title("Drying Complete !")
+    window.iconbitmap("icons\\bubbles.ico")
+    window.geometry("400x220")
     
-    
-    #placement
-    # Get the screen width and height
-    screen_width = window.winfo_screenwidth()
-    screen_height = window.winfo_screenheight()
-
-    # Calculate the x and y coordinates for the window to be placed in the middle
-    x_coordinate = int((screen_width - window.winfo_reqwidth()) / 2)
-    y_coordinate = int((screen_height - window.winfo_reqheight()) / 2)
+    custom_font = ("Roboto", 24)
 
     # Set the geometry of the window to place it in the middle
-    window.geometry("+{}-{}".format(x_coordinate, y_coordinate))
+    #window.geometry("+{}+{}".format(x_coordinate, y_coordinate))
     
     # Load the image
-    original_image = Image.open(resource_path("icons\\icon2.ico"))
-    
-    # Resize the image
-    width, height = 50, 50  # Set the desired width and height
-    resized_image = original_image.resize((width, height))
-    
-    # Convert the resized image to PhotoImage
-    image = ImageTk.PhotoImage(resized_image)
-    
-    # Display the image
-    label_image = tk.Label(window, image=image)
-    label_image.pack(pady=10)
-    
-    # Create a label with the message
-    label = tk.Label(window, text="Drying is Complete!\nYou can get your clothes now!", font=("Segoe UI", 20), padx=10, pady=10)
-    label.pack()
+    image = customtkinter.CTkImage(light_image=Image.open("icons\\bubbles.ico"),
+	dark_image=Image.open("icons\\bubbles.ico"),
+	size=(50,50)) # WidthxHeight
+       
+    my_label = customtkinter.CTkLabel(window, text="", image=image)
+    my_label.pack(pady=10)
     
     
-    # Define custom font
-    custom_font = ("Segoe UI", 12)
+    # Create a label with the message 
+    label = customtkinter.CTkLabel(master=window, text="Drying is Complete!\nYou can get your clothes now!", font=(custom_font, 20))
+    label.pack(pady=10)
     
-    # Function to handle button hover
-    def on_enter(btn):
-        btn.config(bg="cyan")
+ 
+    # Okay Button
+    #btn_done = tk.Button(window, text="Okay !", font=custom_font, width=20, padx=20, pady=10, command=lambda: over_and_out(), bd=2, relief="solid", highlightbackground="red")
     
-    # Function to handle button hover exit
-    def on_leave(btn):
-        btn.config(bg="turquoise")
-     
-    # Button for machine 2
-    btn_done = tk.Button(window, text="Okay !", font=custom_font, width=20, padx=20, pady=10, command=lambda: over_and_out(), bd=2, relief="solid", highlightbackground="red")
-    btn_done.pack(pady=10)
-    btn_done.bind("<Enter>", lambda event, btn=btn_done: on_enter(btn))
-    btn_done.bind("<Leave>", lambda event, btn=btn_done: on_leave(btn))
+    btn_done = customtkinter.CTkButton(master=window,
+                                text="Okay !",
+                                font=(custom_font,20),
+                                text_color=("white","dark slate gray"),
+                                width=270,
+                                height=40,
+                                border_width=3,
+                                border_color=("white","black"),
+                                corner_radius=20,
+                                command=lambda:over_and_out(), 
+                                fg_color=("cyan","lightgray"),
+                                hover_color=("#4ee89b","cyan")       
+                                )
+    btn_done.pack(pady=4)
     
-    label2=tk.Label(window, text="By Aziz Hizem.", font=("Segoe UI", 9), fg="grey", padx=10, pady=10)
-    label2.pack()
-    
+
+    label = customtkinter.CTkLabel(master=window, text="By Aziz Hizem.",text_color="gray", font=(custom_font, 9),
+                               width=120,
+                               height=25,
+                               corner_radius=20)
+    label.pack(pady=3)
+      
     play_sound()       
     # Run the tkinter event loop
     window.mainloop()
+   
     
+def select_machine():
+    def handle_selection(machine_number):
+        root.destroy()  # Close the selection window
+        print(machine_number)
+        check_washing_machine_status(machine_number)  
     
-def close_window(window):
-    """Function to close a specific Tkinter window."""
-    window.destroy()
+    root = customtkinter.CTk()
+    root.title("Choose Your Machine !")
+    root.iconbitmap("icon.ico")
+    
+    # Get the screen width and height
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    # Calculate the x and y coordinates for the window to be placed in the middle
+    x_coordinate = int((screen_width - root.winfo_reqwidth()) / 2)
+    y_coordinate = int((screen_height - root.winfo_reqheight()) / 2)
+
+    # Set the geometry of the window to place it in the middle
+    #root.geometry("+{}+{}".format(x_coordinate, y_coordinate))
+    root.geometry("300x360")
+  
+    
+    # Define custom font
+    custom_font = ("Roboto", 24)
+    
+    #image 
+    my_image = customtkinter.CTkImage(light_image=Image.open("icons\\icon1.ico"),
+	dark_image=Image.open("icons\\icon1.ico"),
+	size=(50,50)) # WidthxHeight
+
+    my_label = customtkinter.CTkLabel(root, text="", image=my_image)
+    my_label.pack(pady=10)
     
 
+    label = customtkinter.CTkLabel(master=root, text="Choose Your Machine !", font=(custom_font, 20))
+    label.pack(pady=10)
+    #label.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
+    #must be n, ne, e, se, s, sw, w, nw, or center
+    
 
-# Call the function to select machine and check its status
+    label = customtkinter.CTkLabel(master=root, text="(Use F3 to close the program later)",fg_color="light gray", font=(custom_font, 9),
+                               text_color=("white","dark slate gray"),
+                               width=120,
+                               height=25,
+                               corner_radius=20)
+    label.pack(pady=10)
+     
+    # Button for machine 2
+    btn_machine_2 = customtkinter.CTkButton(master=root,
+                                text="2",
+                                font=custom_font,
+                                text_color=("white","dark slate gray"),
+                                width=270,
+                                height=32,
+                                border_width=2,
+                                border_color=("white","black"),
+                                corner_radius=20,
+                                command=lambda:handle_selection(2), 
+                                fg_color=("cyan","lightgray"),
+                                hover_color=("#4ee89b","cyan")    
+                                )
+    btn_machine_2.pack(pady=10)
+    
+    # Button for machine 3
+    btn_machine_3= customtkinter.CTkButton(master=root,
+                                text="3",
+                                font=custom_font,
+                                text_color=("white","dark slate gray"),
+                                width=270,
+                                height=32,
+                                border_width=2,
+                                border_color=("white","black"),
+                                corner_radius=20,
+                                command=lambda:handle_selection(3), 
+                                fg_color=("cyan","lightgray"),
+                                hover_color=("#4ee89b","cyan")        
+                                )
+    btn_machine_3.pack(pady=10)
+
+    
+    #aziz
+    def aziz_click():
+        s=customtkinter.get_appearance_mode()
+        if s=="Light":
+            customtkinter.set_appearance_mode("Dark")
+        elif s=="Dark":
+            customtkinter.set_appearance_mode("Light")
+        pass
+    
+    
+    aziz= customtkinter.CTkButton(master=root,
+                                text="By Aziz Hizem.",
+                                font=("Roboto", 9),
+                                text_color="dark slate gray",
+                                
+                                width=120,
+                                height=25,
+                                
+                                corner_radius=20,
+                                command=lambda:aziz_click(), 
+                                fg_color=("lavender", "lavender"),
+                                hover_color="turquoise"       
+                                )
+    aziz.pack(pady=2)
+   
+
+    label = customtkinter.CTkLabel(master=root, text="Click my name...",text_color="dark gray", font=("Roboto", 9),
+                               )
+    label.pack()
+    
+      
+    root.mainloop()
+
+
+def play_sound():
+    winsound.PlaySound("SystemExclamation",0)
+
+
+customtkinter.set_appearance_mode("light")
+customtkinter.set_default_color_theme("dark-blue")
+
+# Call the function to select machine and check its status : Main program
 select_machine()
+

@@ -5,7 +5,7 @@ a = Analysis(
     ['proxiwash.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('msedgedriver.exe', '.'), ('icons', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -21,7 +21,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='proxi1.4',
+    name='ProxiWash',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -34,4 +34,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=['icon.ico'],
 )
