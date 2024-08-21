@@ -2,11 +2,11 @@ import os
 import time
 import customtkinter
 import winsound
-import keyboard
 import threading
 from pynput import keyboard
 from PIL import Image 
 from selenium import webdriver
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.options import Options
@@ -29,10 +29,8 @@ def check_washing_machine_status(machine_number):
     # Set up Edge options
     edge_options = Options()
     edge_options.use_chromium = True
-    # Path to your Edge driver executable
-    edge_driver_path = ("msedgedriver.exe")
-    # Start the WebDriver and open the website
-    driver = webdriver.Edge(service=Service(edge_driver_path), options=edge_options)
+
+    driver = webdriver.Edge(service=Service(EdgeChromiumDriverManager().install()), options=edge_options)
     driver.get("https://www.proxiwash.com/laverie?code=82fc94&fbclid=IwAR04XPVHi0cGsI1CtQS-qWPLHjVAbsHtah8lm_ull0bNhLxpvbUtu5OwdqE") 
     #send_notification("Checking is on !")
     time.sleep(2) 
