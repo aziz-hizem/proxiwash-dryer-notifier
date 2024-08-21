@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import customtkinter
 import winsound
@@ -12,6 +13,16 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.edge.options import Options
 from selenium.common.exceptions import StaleElementReferenceException
 from plyer import notification
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temporary folder and stores the path in _MEIPASS
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 def send_notification(message):
@@ -156,13 +167,13 @@ def quit():
     window.title("Program Terminated.")
     window.geometry("450x210")
     
-    window.iconbitmap("icons\\icon2.ico")
+    window.iconbitmap(resource_path("icons\\icon2.ico"))
     
     custom_font = ("Roboto", 24)
     
     # Load the image
-    image = customtkinter.CTkImage(light_image=Image.open("icons\\icon2.ico"),
-	dark_image=Image.open("icons\\icon2.ico"),
+    image = customtkinter.CTkImage(light_image=Image.open(resource_path("icons\\icon2.ico")),
+	dark_image=Image.open(resource_path("icons\\icon2.ico")),
 	size=(50,50)) # WidthxHeight
        
     my_label = customtkinter.CTkLabel(window, text="", image=image)
@@ -214,7 +225,7 @@ def show_drying_complete_window(driver):
     # Create a new tkinter window
     window = customtkinter.CTk()
     window.title("Drying Complete !")
-    window.iconbitmap("icons\\bubbles.ico")
+    window.iconbitmap(resource_path("icons\\bubbles.ico"))
     window.geometry("400x220")
     
     custom_font = ("Roboto", 24)
@@ -223,8 +234,8 @@ def show_drying_complete_window(driver):
     #window.geometry("+{}+{}".format(x_coordinate, y_coordinate))
     
     # Load the image
-    image = customtkinter.CTkImage(light_image=Image.open("icons\\bubbles.ico"),
-	dark_image=Image.open("icons\\bubbles.ico"),
+    image = customtkinter.CTkImage(light_image=Image.open(resource_path("icons\\bubbles.ico")),
+	dark_image=Image.open(resource_path("icons\\bubbles.ico")),
 	size=(50,50)) # WidthxHeight
        
     my_label = customtkinter.CTkLabel(window, text="", image=image)
@@ -274,7 +285,7 @@ def select_machine():
     
     root = customtkinter.CTk()
     root.title("Choose Your Machine !")
-    root.iconbitmap("icon.ico")
+    root.iconbitmap(resource_path("icon.ico"))
     
     # Get the screen width and height
     screen_width = root.winfo_screenwidth()
@@ -293,8 +304,8 @@ def select_machine():
     custom_font = ("Roboto", 24)
     
     #image 
-    my_image = customtkinter.CTkImage(light_image=Image.open("icons\\icon1.ico"),
-	dark_image=Image.open("icons\\icon1.ico"),
+    my_image = customtkinter.CTkImage(light_image=Image.open(resource_path("icons\\icon1.ico")),
+	dark_image=Image.open(resource_path("icons\\icon1.ico")),
 	size=(50,50)) # WidthxHeight
 
     my_label = customtkinter.CTkLabel(root, text="", image=my_image)

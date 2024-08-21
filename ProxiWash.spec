@@ -5,13 +5,14 @@ a = Analysis(
     ['proxiwash.py'],
     pathex=[],
     binaries=[],
-    datas=[('msedgedriver.exe', '.'), ('icons', '.')],
+    datas=[('icon.ico', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
+    optimize=0,
 )
 pyz = PYZ(a.pure)
 
