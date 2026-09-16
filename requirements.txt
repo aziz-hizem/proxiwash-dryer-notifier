@@ -1,0 +1,6 @@
+customtkinter
+pillow
+pynput
+plyer
+selenium
+webdriver-manager

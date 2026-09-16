@@ -16,21 +16,17 @@ from plyer import notification
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
-    try:
-        # PyInstaller creates a temporary folder and stores the path in _MEIPASS
-        base_path = sys._MEIPASS2
-    except Exception:
-        base_path = os.path.abspath(".")
-
+    # PyInstaller unpacks bundled files to a temporary folder stored in sys._MEIPASS
+    base_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
 
 
 def send_notification(message):
-    notification.app_name = "ProxiWash 1.7 By Aziz Hizem"
+    notification.app_name = "ProxiWash 1.8 By Aziz Hizem"
     notification.notify(
         title="Drying Machine Status",
         message=message,
-        app_icon=("icons\\icon1.ico"),
+        app_icon=resource_path("icons\\icon1.ico"),
         timeout=1
     )
   
@@ -63,7 +59,7 @@ def check_washing_machine_status(machine_number):
             if key == keyboard.Key.f3:
                 print("Exit Key : F3 pressed")
                 driver.quit()
-                quit()
+                show_exit_window()
                 os._exit(0)
         except AttributeError:
             pass
@@ -156,7 +152,7 @@ def check_washing_machine_status(machine_number):
             continue
  
 
-def quit():
+def show_exit_window():
        
     # Function to exit the program
     def exit_program():
