@@ -4,6 +4,8 @@ A small Windows desktop app built for a student residence laundry room (Student 
 
 It is tailored to that building: the laundry page and the dryers it offers (**2** and **3**) are built in.
 
+![Dryer selection and the completion alert](docs/screenshots.png)
+
 ## How it works
 
 1. A selection window asks which dryer to watch.
